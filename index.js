@@ -1,4 +1,5 @@
 const OMP = require('./src/omp');
+const fs = require('fs');
 
 var omp = new OMP({
 	username: 'admin',
@@ -11,21 +12,6 @@ status.then((result) => {
 	var login = omp.login();
 	login.then((user) => {
 		console.log(user);
-	});
-
-	var create = omp.createTarget({
-		name: 'Test Target3',
-		hosts: '192.168.1.0/24',
-		comment: 'This is only a test target',
-		excludeHosts: '192.168.1.255',
-		aliveTests: 'ICMP Ping',
-		ports: '1-1024'
-	});
-
-	create.then((success) => {
-		console.dir(success, {colors: true});
-	}, (err) => {
-		console.error(err);
 	});
 
 }, (err) => {

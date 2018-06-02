@@ -212,9 +212,77 @@ class OMP {
 			}
 
 			var xml = jsonxml(json);
-			console.log(xml);
 			this.sendCommand(xml,
 				createResponsePromise(this._handleCreateTarget, resolve, reject));
+		});
+	}
+
+	/*
+	 * createAgent(opts)
+	 * opts:
+	 *	installer: { (required)
+	 *		(required) executable: (String) base64 encoded executable
+	 *		signature: (String) A detached OpenPGP signature of the installer.
+	 *	}
+	 *	(required) name: String
+	 * 	comment: String
+	 *	copy: Id
+	 *	howToInstall: (String) base64 encoded installation instructions
+	 *	howToUse: (String) base64 encoded user instructions
+	 */
+	createAgent(opts) {
+		if (!opts.installer.executable)
+			throw new Error('createAgent: missing required option `installer.executable`');
+
+		if (!opts.name)
+			throw new Error('createAgent: missing required option `name`');
+
+		return new Promise((resolve, reject) => {
+			var json = {
+				create_agent: [
+					{name: 'name', text: opts.name},
+					{name: 'installer', text: opts.installer.executable}
+				]
+			};
+
+			if (opts.installer.signature) {
+				json.create_agent[1].children = [
+					{name: 'signature', text: opts.installer.signature}
+				];
+			}
+
+			if (opts.comment) {
+				json.create_agent.push({
+					name: 'comment',
+					text: opts.comment
+				});
+			}
+
+			if (opts.copy) {
+				json.create_agent.push({
+					name: 'copy',
+					text: opts.copy
+				});
+			}
+
+			if (opts.howToInstall) {
+				json.create_agent.push({
+					name: 'how_to_install',
+					text: opts.howToInstall
+				});
+			}
+
+			if (opts.howToUse) {
+				json.create_agent.push({
+					name: 'how_to_use',
+					text: opts.howToUse
+				});
+			}
+
+			var xml = jsonxml(json);
+			console.log(xml);
+			this.sendCommand(xml,
+				createResponsePromise(this._handleCreateAgent, resolve, reject));
 		});
 	}
 
@@ -251,6 +319,15 @@ class OMP {
 
 	_handleCreateTarget(res, resolve, reject) {
 		var res = res.create_target_response;
+		if (res.status === '201') {
+			return resolve(res);
+		}
+
+		return reject(res.status_text);
+	}
+
+	_handleCreateAgent(res, resolve, reject) {
+		var res = res.create_agent_response;
 		if (res.status === '201') {
 			return resolve(res);
 		}

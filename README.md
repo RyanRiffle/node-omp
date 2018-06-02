@@ -8,3 +8,4 @@ in progress and all aspects of the protocol are not implemented.
 - authenticate
 - get_targets
 - create_target
+- create_agent
