@@ -1,0 +1,16 @@
+{
+  "name": "omp",
+  "version": "0.1.0",
+  "description": "OpenVAS OMP communicator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "GPL-2.0",
+  "dependencies": {
+    "jsontoxml": "^1.0.0",
+    "xml2js": "^0.4.19",
+    "xml2json": "^0.11.2"
+  }
+}
