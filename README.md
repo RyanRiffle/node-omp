@@ -9,3 +9,4 @@ in progress and all aspects of the protocol are not implemented.
 - get_targets
 - create_target
 - create_agent
+- create_group

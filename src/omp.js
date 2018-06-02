@@ -97,6 +97,7 @@ class OMP {
 
 	/*
      * createTarget(opts)
+     * Creates a scan target
      *
      * opts:
      * 	!name: String
@@ -219,6 +220,8 @@ class OMP {
 
 	/*
 	 * createAgent(opts)
+	 * Creates an scanning agent
+	 *
 	 * opts:
 	 *	installer: { (required)
 	 *		(required) executable: (String) base64 encoded executable
@@ -286,6 +289,55 @@ class OMP {
 		});
 	}
 
+	/*
+	 * createGroup(opts)
+	 * Creates a user group and optionally adds users into it.
+	 *
+	 * opts:
+	 *	name: (required) String
+	 *	comment: String
+	 *	copy: Id
+	 *	users: String, csv list of users to add to group
+	 */
+	createGroup(opts) {
+		if (!opts.name)
+			throw new Error('createGroup missing required `name` option');
+
+		return new Promise((resolve, reject) => {
+			var json = {
+				create_group: [
+					{name: 'name', text: opts.name}
+				]
+			};
+
+			if (opts.comment) {
+				json.create_group.push({
+					name: 'comment',
+					text: opts.comment
+				});
+			}
+
+			if (opts.copy) {
+				json.create_group.push({
+					name: 'copy',
+					text: opts.copy
+				});
+			}
+
+			if (opts.users) {
+				json.create_group.push({
+					name: 'users',
+					text: opts.users
+				});
+			}
+
+			var xml = jsonxml(json);
+			console.log(xml);
+			this.sendCommand(xml,
+				createResponsePromise(this._handleCreateGroup, resolve, reject));
+		});
+	}
+
 	sendCommand(cmd, res) {
 		this.commandQueue.push(cmd);
 		this.responseHandlerQueue.push(res);
@@ -328,6 +380,15 @@ class OMP {
 
 	_handleCreateAgent(res, resolve, reject) {
 		var res = res.create_agent_response;
+		if (res.status === '201') {
+			return resolve(res);
+		}
+
+		return reject(res.status_text);
+	}
+
+	_handleCreateGroup(res, resolve, reject) {
+		var res = res.create_group_response;
 		if (res.status === '201') {
 			return resolve(res);
 		}
