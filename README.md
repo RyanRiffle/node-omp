@@ -10,3 +10,4 @@ in progress and all aspects of the protocol are not implemented.
 - create_target
 - create_agent
 - create_group
+- create_permission
