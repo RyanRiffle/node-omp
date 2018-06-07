@@ -338,6 +338,73 @@ class OMP {
 		});
 	}
 
+	/*
+	 * createPermission(opts)
+	 * Give permissions to user, group, or role
+	 * opts:
+	 *	name: Permission Name (currently name of a command)
+	 *	subject:
+	 *		id: ID
+	 *		type: String (user, group, or role)
+	 *	resource:
+	 *		id: ID
+	 *		type: user, group, role
+	 *	copy: String (id of existion permission)
+	 *	comment: String
+	 */
+	createPermission(opts) {
+
+		if (!opts.name && !opts.subject) {
+			throw new Error('createPermission missing required `name` and `subject` options');
+		}
+
+		return new Promise((resolve, reject) => {
+			var json = {
+				create_permission: [
+					{name: 'name', text: opts.name},
+					{name: 'subject', attrs: {
+						id: opts.subject.id
+					}, children: {type: opts.subject.type}}
+				]
+			};
+
+			if (opts.resource) {
+				json.create_permission.push_back({
+					name: 'resource',
+					attrs: {
+						id: opts.resource.id,
+					},
+					children: {}
+				});
+			}
+
+			if (opts.resource && opts.resource.type) {
+				json.create_permission[json.create_permission.length - 1].children = {
+					type: opts.resource.type
+				};
+			}
+
+			if (opts.copy) {
+				json.create_permission.push_back({
+					name: 'copy',
+					text: opts.copy
+				});
+			}
+
+			if (opts.comment) {
+				json.create_permission.push_back({
+					name: 'comment',
+					text: opts.comment
+				});
+			}
+
+			var xml = jsonxml(json);
+			console.log(xml);
+			this.sendCommand(xml,
+				createResponsePromise(this._handleCreatePermission, resolve, reject));
+		});
+	}
+
 	sendCommand(cmd, res) {
 		this.commandQueue.push(cmd);
 		this.responseHandlerQueue.push(res);
@@ -389,6 +456,15 @@ class OMP {
 
 	_handleCreateGroup(res, resolve, reject) {
 		var res = res.create_group_response;
+		if (res.status === '201') {
+			return resolve(res);
+		}
+
+		return reject(res.status_text);
+	}
+
+	_handleCreatePermission(res, resolve, reject) {
+		var res = res.create_permission_response;
 		if (res.status === '201') {
 			return resolve(res);
 		}
