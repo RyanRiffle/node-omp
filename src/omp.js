@@ -463,6 +463,52 @@ class OMP {
 		});
 	}
 
+	/*
+	 * createPortList(opts)
+	 * Adds a port range to a port list
+	 * opts:
+	 *	comment: String
+	 *	portList: String (id of the portList to add range to)
+	 *  start: Number (first port in the range)
+	 *	end: Number (last port in the range)
+	 *	type: String (type of the ports e.g. TCP, UDP)
+	 */
+	addPortRange(opts) {
+		if (!opts.portList)
+			return new Error('addPortRange missing required `portList` option');
+
+		if (!opts.start)
+			return new Error('addPortRnage missing required `start` option');
+
+		if (!opts.end)
+			return new Error('addPortRange missing required `end` option');
+
+		if (!opts.type)
+			return new Error('addPortRange missing required `type` option');
+
+		return new Promise((resolve, reject) => {
+			var json = {
+				create_port_range: [
+					{name: 'port_list', attrs: {
+						id: opts.portList
+					}},
+					{name: 'start', text: opts.start},
+					{name: 'end', text: opts.end},
+					{name: 'type', text: opts.type}
+				]
+			};
+
+			if (opts.comment) {
+				json.create_port_range.push({
+					name: 'comment',
+					text: opts.comment
+				});
+			}
+
+			this.sendJSONCommand(json, this._handleCreateAction, resolve, reject);
+		});
+	}
+
 	sendCommand(cmd, res) {
 		this.commandQueue.push(cmd);
 		this.responseHandlerQueue.push(res);
