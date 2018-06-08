@@ -214,7 +214,7 @@ class OMP {
 
 			var xml = jsonxml(json);
 			this.sendCommand(xml,
-				createResponsePromise(this._handleCreateTarget, resolve, reject));
+				createResponsePromise(this._handleCreateAction, resolve, reject));
 		});
 	}
 
@@ -285,7 +285,7 @@ class OMP {
 			var xml = jsonxml(json);
 			console.log(xml);
 			this.sendCommand(xml,
-				createResponsePromise(this._handleCreateAgent, resolve, reject));
+				createResponsePromise(this._handleCreateAction, resolve, reject));
 		});
 	}
 
@@ -334,7 +334,7 @@ class OMP {
 			var xml = jsonxml(json);
 			console.log(xml);
 			this.sendCommand(xml,
-				createResponsePromise(this._handleCreateGroup, resolve, reject));
+				createResponsePromise(this._handleCreateAction, resolve, reject));
 		});
 	}
 
@@ -401,7 +401,65 @@ class OMP {
 			var xml = jsonxml(json);
 			console.log(xml);
 			this.sendCommand(xml,
-				createResponsePromise(this._handleCreatePermission, resolve, reject));
+				createResponsePromise(this._handleCreateAction, resolve, reject));
+		});
+	}
+
+	/*
+	 * createPortList(opts)
+	 * Creates a port list
+	 * opts:
+	 *	name: String (name of port list)
+	 *  /////// Use either portRange or getPortListsResponse but not both
+	 *	portRange: String (comma seperated string of port ranges ex: T:1-1024,U:1-1024)
+	 *  getPortListsResponse: json (response from OMP.getPortLists)
+	 *	copy: String (id of existion permission)
+	 *	comment: String
+	 */
+	createPortList(opts) {
+		if (!opts || !opts.name)
+			return new Error('createPortList missing required `name` option');
+
+		if (!opts.portRange && !opts.getPortListsResponse)
+			return new Error('createPortList missing either `portRange` or `getPortListsResponse` option');
+
+		return new Promise((resolve, reject) => {
+			var json = {
+				create_port_list: [
+					{name: 'name', text: opts.name}
+				]
+			};
+
+			console.log(json.create_port_list);
+			if (opts.portRange) {
+				json.create_port_list.push({
+					name: 'port_range',
+					text: opts.portRange
+				});
+			}
+
+			if (opts.getPortListsResponse) {
+				json.create_port_list.push({
+					name: 'get_port_lists_response',
+					text: opts.getPortListsResponse
+				});
+			}
+
+			if (opts.comment) {
+				json.create_port_list.push({
+					name: 'comment',
+					text: opts.comment
+				});
+			}
+
+			if (opts.copy) {
+				json.create_port_list.push({
+					name: 'copy',
+					text: opts.copy
+				});
+			}
+
+			this.sendJSONCommand(json, this._handleCreateAction, resolve, reject);
 		});
 	}
 
@@ -409,6 +467,13 @@ class OMP {
 		this.commandQueue.push(cmd);
 		this.responseHandlerQueue.push(res);
 		this._sendCommand();
+	}
+
+	sendJSONCommand(json, responseFn, resolve, reject) {
+		var xml = jsonxml(json);
+		console.log(xml);
+		this.sendCommand(xml,
+			createResponsePromise(responseFn, resolve, reject));
 	}
 
 	_handleLogin(res, resolve, reject) {
@@ -436,35 +501,8 @@ class OMP {
 		return reject(targets_res.status_text);
 	}
 
-	_handleCreateTarget(res, resolve, reject) {
-		var res = res.create_target_response;
-		if (res.status === '201') {
-			return resolve(res);
-		}
-
-		return reject(res.status_text);
-	}
-
-	_handleCreateAgent(res, resolve, reject) {
-		var res = res.create_agent_response;
-		if (res.status === '201') {
-			return resolve(res);
-		}
-
-		return reject(res.status_text);
-	}
-
-	_handleCreateGroup(res, resolve, reject) {
-		var res = res.create_group_response;
-		if (res.status === '201') {
-			return resolve(res);
-		}
-
-		return reject(res.status_text);
-	}
-
-	_handleCreatePermission(res, resolve, reject) {
-		var res = res.create_permission_response;
+	_handleCreateAction(res, resolve, reject) {
+		var res = res[Object.keys(res)[0]];
 		if (res.status === '201') {
 			return resolve(res);
 		}
